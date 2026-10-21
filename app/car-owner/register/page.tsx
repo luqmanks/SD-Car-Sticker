@@ -10,53 +10,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { set } from "date-fns"
+import { api, useSession } from "@/hooks/use-session"
 
 export default function RegisterPage() {
-  const [isAuthenticatedState, setIsAuthenticatedState] = useState(false);
-  const [user, setUser] = useState({
-    email: "",
-    user_id: "",
-    pin_number: "",
-    phone_number: ""
-  });
+  const { user, loading } = useSession()
 
   useEffect(() => {
-    const checkAuthentication = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setIsAuthenticatedState(false);
-          return;
-        }
-
-        const response = await fetch("http://192.168.4.183:8000/is_authenticated", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const user = await response.json();
-          setUser(user);
-          setIsAuthenticatedState(true);
-        } else {
-          const user = null;
-          setIsAuthenticatedState(false);
-        }
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-        setIsAuthenticatedState(false);
-      }
-    };
-
-    checkAuthentication();
-  }, []);
-
-  const isAuthenticated = () => {
-    return isAuthenticatedState;
-  };
+    if (!loading && !user) window.location.href = "/login"
+  }, [loading, user])
 
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
@@ -96,7 +57,7 @@ export default function RegisterPage() {
     if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = "Phone number is required"
       isValid = false
-    } else if (!/^\+?[0-9]{10,15}$/.test(formData.phoneNumber.trim())) {
+    } else if (!/^\+?[0-9]{9,15}$/.test(formData.phoneNumber.trim())) {
       newErrors.phoneNumber = "Please enter a valid phone number"
       isValid = false
     }
@@ -131,150 +92,36 @@ export default function RegisterPage() {
     return isValid
   }
 
-  const handleNext = async (event: React.FormEvent) => {
-    event.preventDefault();
-    isAuthenticated();
-    if (!isAuthenticatedState) {
-      window.location.href = "/login";
-    }
-    const { plateNumber } = formData
-    const { user_id } = user
-
-    if (validateStep1()) {
-      console.log("Checking car plate data:", JSON.stringify({ plateNumber }))
-      try {
-        const response = await fetch("http://192.168.4.183:8000/cars/" + plateNumber, {
-          method: "GET"
-        });
-
-        const data = await response.json().catch(() => null);
-
-        if (!response.ok) {
-          console.error("Checking car data failed:", data?.detail || response.statusText);
-          alert("Checking car data failed. Please try again.");
-        } else if (data) {
-          // Handle car already exists
-          console.error("Car already exists:", data?.detail || response.statusText);
-          alert("Car already exists. Please try again.");
-        } else {
-          // Proceed to the next step
-          setStep(2);
-        }
-      } catch (error) {
-        console.error("Registration error:", error);
-        alert("Registration failed. Please try again.");
-      }
-    }
+  const handleNext = (event: React.FormEvent) => {
+    event.preventDefault()
+    if (validateStep1()) setStep(2)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validateStep2()) return
 
-    const { user_id, email } = user
     const { plateNumber, pin, phoneNumber, password } = formData
-    let validation = true
-    if (validateStep2()) {
+    try {
+      // Profile first: it verifies the password and is safe to retry. The car insert is last
+      // because registering the same plate twice is rejected.
+      await api("/api/auth/profile", "PATCH", { phoneNumber, pin, password })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Registration failed"
+      if (/password/i.test(message)) setErrors((prev) => ({ ...prev, password: message }))
+      else alert(message)
+      return
+    }
 
-      // authenticate password
-
-      console.log("Authenticating user:", JSON.stringify({ email, password }))
-
-      try {
-        const response = await fetch("http://192.168.4.183:8000/token", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: `username=${email}&password=${password}`,
-        });
-
-        if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("token", data.access_token);
-        } else {
-          // Handle login error
-          validation = false
-          console.error("Login failed:", response.statusText);
-          alert("Wrong password. Please check your credentials.");
-        }
-      } catch (error) {
-        console.error("Login error:", error);
-        alert("Authentication failed. Please try again.");
-      }
-
-      //create car and update user
-
-      const car_status = 0
-      if (validation) try {
-        console.log("Sending data:", JSON.stringify({ plateNumber, user_id, car_status }))
-        let response = await fetch("http://192.168.4.183:8000/cars", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ plateNumber, user_id, car_status }),
-        });
-
-        let data = await response.json().catch(() => null);
-
-        if (!response.ok) {
-          // Handle registration error
-          console.error("Car registration failed:", data?.detail || response.statusText);
-          alert("Car registration failed. Please try again.");
-          validation = false
-        }
-
-        const pin_number = pin;
-        const phone_number = phoneNumber;
-        response = await fetch("http://192.168.4.183:8000/update", {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ user_id, pin_number, phone_number }),
-        });
-
-        data = await response.json().catch(() => null);
-
-        if (!response.ok) {
-          // Handle registration error
-          console.error("Registration failed:", data?.detail || response.statusText);
-          alert("Registration failed. Please try again.");
-          validation = false
-        }
-      } catch (error) {
-        console.error("Registration error:", error);
-        alert("Registration failed. Please try again.");
-      }
-
-      // update token
-
-      if (validation) try {
-        const response = await fetch("http://192.168.4.183:8000/token", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: `username=${email}&password=${password}`,
-        });
-
-        if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("token", data.access_token);
-        } else {
-          // Handle login error
-          validation = false
-          console.error("Login failed:", response.statusText);
-          alert("Wrong password. Please check your credentials.");
-        }
-      } catch (error) {
-        console.error("Login error:", error);
-        alert("Authentication failed. Please try again.");
-      }
-
-      if (validation) {
-        window.location.href = "/car-owner/register/success"
-      }
+    try {
+      await api("/api/cars", "POST", { plateNumber })
+      window.location.href = "/car-owner/register/success"
+    } catch (error) {
+      setStep(1)
+      setErrors((prev) => ({
+        ...prev,
+        plateNumber: error instanceof Error ? error.message : "Could not register car",
+      }))
     }
   }
 
@@ -289,7 +136,7 @@ export default function RegisterPage() {
         <Card className="max-w-md mx-auto shadow-lg">
           <CardHeader className="bg-[#00A86B] text-white rounded-t-lg">
             <div className="flex items-center">
-              <Image src="/images/parksyde-logo.png" alt="ParkSyde Logo" width={36} height={36} className="mr-2" />
+              <Image src="/images/sd-logo.svg" alt="SD Car Sticker logo" width={36} height={36} className="mr-2" />
               <div>
                 <CardTitle className="text-2xl flex items-center">
                   <Car className="mr-2 h-6 w-6" />

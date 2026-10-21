@@ -89,7 +89,7 @@ export default function OrderNFCPage() {
             <Card className="shadow-lg">
               <CardHeader className="bg-[#00A86B] text-white rounded-t-lg">
                 <div className="flex items-center">
-                  <Image src="/images/parksyde-logo.png" alt="ParkSyde Logo" width={36} height={36} className="mr-2" />
+                  <Image src="/images/sd-logo.svg" alt="SD Car Sticker logo" width={36} height={36} className="mr-2" />
                   <div>
                     <CardTitle className="text-2xl flex items-center">
                       <Package className="mr-2 h-6 w-6" />

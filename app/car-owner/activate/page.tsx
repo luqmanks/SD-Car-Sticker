@@ -8,217 +8,80 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { api, useSession } from "@/hooks/use-session"
 
+type OwnedCar = { plateNumber: string; carStatus: boolean; activatedAt: string | null; nfcCode: string }
 
 export default function ActivatePage() {
+  const { user, loading } = useSession()
   const [isActive, setIsActive] = useState(false)
   const [showPinInput, setShowPinInput] = useState(false)
   const [plateNumber, setPlateNumber] = useState("")
   const [pin, setPin] = useState("")
   const [error, setError] = useState("")
   const [activeSince, setActiveSince] = useState<Date | null>(null)
-  const [registeredPlates, setRegisteredPlates] = useState<{ plateNumber: string }[]>([])
+  const [registeredPlates, setRegisteredPlates] = useState<OwnedCar[]>([])
   const [showPlateSelector, setShowPlateSelector] = useState(true)
   const [showAddNewPlate, setShowAddNewPlate] = useState(false)
   const [newPlateNumber, setNewPlateNumber] = useState("")
   const [plateDropdownOpen, setPlateDropdownOpen] = useState(false)
-  const [carplates, setCarPlates] = useState([]);
-  const [isAuthenticatedState, setIsAuthenticatedState] = useState(false);
-  const [activeTimer, setActiveTimer] = useState(0);
-  const [user, setUser] = useState({
-    email: "",
-    user_id: "",
-    pin_number: "",
-    phone_number: ""
-  });
+  const [, setActiveTimer] = useState(0)
 
   useEffect(() => {
-    const checkAuthentication = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setIsAuthenticatedState(false);
-          return;
-        }
-        const response = await fetch("http://192.168.4.183:8000/is_authenticated", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (response.ok) {
-          const user = await response.json();
-          console.log("Authenticated user:", user);
-          setUser(user);
-          setIsAuthenticatedState(true);
-        } else {
-          const user = null;
-          setIsAuthenticatedState(false);
-        }
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-        setIsAuthenticatedState(false);
-      }
-    };
-    checkAuthentication();
-  }, []);
-  const isAuthenticated = () => {
-    return isAuthenticatedState;
-  };
-
-  useEffect(() => {
-    isAuthenticated();
-
-    
-    const fetchCarPlates = async () => {
-      try {
-        const response = await fetch("http://192.168.4.183:8000/carsUser/" + user.user_id, {
-          method: "GET"
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          console.log("Car plates data:", data)
-          setRegisteredPlates(data)
-        } else {
-          console.error("Failed to fetch car plates")
-        }
-      } catch (error) {
-        console.error("Error fetching car plates:", error)
-      }
+    if (loading) return
+    if (!user) {
+      window.location.href = "/login"
+      return
     }
+    api<OwnedCar[]>("/api/cars", "GET")
+      .then(setRegisteredPlates)
+      .catch((e) => console.error("Error fetching car plates:", e))
+  }, [loading, user])
 
-    fetchCarPlates()
-
-  }, [isAuthenticatedState])
-
-  const handleActivate = async () => {
+  const handleActivate = () => {
     if (!plateNumber.trim()) {
       setError("Please select or enter a plate number")
       return
     }
-
-    try {
-      const response = await fetch("http://192.168.4.183:8000/cars/" + plateNumber, {
-        method: "GET"
-      });
-
-      const car = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        console.error("Car not found:", car?.detail || response.statusText);
-        alert("Car not found.");
-      } else {
-        console.log("Car data:", car);
-        console.log("Car active since:", new Date(car.activated_at));
-        console.log("Current time:", new Date());
-        setIsActive(car.car_status)
-        setActiveSince(car.activated_at ? new Date(car.activated_at) : null)
-        setShowPinInput(!car.car_status)
-        setShowPlateSelector(false)
-      }
-    } catch (error) {
-      console.error("Car not found:", error);
-      alert("Car not found. Please try again.");
+    const car = registeredPlates.find((c) => c.plateNumber === plateNumber)
+    if (!car) {
+      setError("Car not found")
+      return
     }
+    setIsActive(car.carStatus)
+    setActiveSince(car.activatedAt ? new Date(car.activatedAt) : null)
+    setShowPinInput(!car.carStatus)
+    setShowPlateSelector(false)
     setError("")
   }
 
-  const handlePinSubmit = async () => {
-    if (!pin.trim()) {
-      setError("Please enter your PIN")
-      return
-    }
-
+  const setCarStatus = async (status: boolean) => {
     if (pin.length !== 4 || !/^\d+$/.test(pin)) {
       setError("PIN must be 4 digits")
       return
     }
-
-    console.log("User:", user)
-    // In a real app, we would verify the PIN with the server
-    if (pin !== user.pin_number) {
-      setError("Incorrect PIN")
-      return
-    }
-
     try {
-      const status = true;
-      console.log("Data:", { plateNumber, status })
-      const response = await fetch("http://192.168.4.183:8000/cars/status", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ plateNumber, status }),
-      });
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        console.error("Car not found:", data?.detail || response.statusText);
-        alert("Car not found.");
-      } else {
-        setIsActive(true)
-        setActiveSince(data.activated_at ? new Date(data.activated_at) : new Date())
-      }
-    } catch (error) {
-      console.error("Deactivation error:", error);
-      alert("Deactivation failed. Please try again.");
+      const data = await api<{ activatedAt: string | null }>("/api/cars/status", "PUT", { plateNumber, status, pin })
+      setRegisteredPlates((cars) =>
+        cars.map((c) => (c.plateNumber === plateNumber ? { ...c, carStatus: status, activatedAt: data.activatedAt } : c)),
+      )
+      setIsActive(status)
+      setActiveSince(status && data.activatedAt ? new Date(data.activatedAt) : null)
+      setShowPinInput(false)
+      setShowPlateSelector(!status)
+      setPin("")
+      setError("")
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong")
     }
-    setShowPinInput(false)
-    setError("")
   }
+
+  const handlePinSubmit = () => setCarStatus(true)
+  const handleDeactivateConfirm = () => setCarStatus(false)
 
   const handleDeactivate = () => {
     setShowPinInput(true)
     setError("")
-  }
-
-  const handleDeactivateConfirm = async () => {
-    if (!pin.trim()) {
-      setError("Please enter your PIN")
-      return
-    }
-
-    if (pin.length !== 4 || !/^\d+$/.test(pin)) {
-      setError("PIN must be 4 digits")
-      return
-    }
-
-    if (pin !== user.pin_number) {
-      setError("Incorrect PIN")
-      return
-    }
-
-    const status = false;
-    try {
-      const response = await fetch("http://192.168.4.183:8000/cars/status", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ plateNumber, status }),
-      });
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        console.error("Car not found:", data?.detail || response.statusText);
-        alert("Car not found.");
-      } else {
-        setIsActive(false)
-        setActiveSince(null)
-        setShowPinInput(false)
-        setShowPlateSelector(true)
-      }
-    } catch (error) {
-      console.error("Deactivation error:", error);
-      alert("Deactivation failed. Please try again.");
-    }
-    setError("")
-    setPin("")
-    
   }
 
   const handleSelectPlate = (selectedPlate: string) => {
@@ -227,66 +90,22 @@ export default function ActivatePage() {
   }
 
   const handleAddNewPlate = async () => {
-    const { user_id, email } = user
     if (!newPlateNumber.trim()) {
       setError("Please enter a plate number")
       return
     }
-
-    console.log("Checking car plate data:", JSON.stringify({ newPlateNumber }))
     try {
-      const response = await fetch("http://192.168.4.183:8000/cars/" + newPlateNumber, {
-        method: "GET"
-      });
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        console.error("Checking car data failed:", data?.detail || response.statusText);
-        alert("Checking car data failed. Please try again.");
-      } else if (data) {
-        // Handle car already exists
-        console.error("Car already exists:", data?.detail || response.statusText);
-        alert("Car already exists. Please try again.");
-      } else {
-        // Proceed to the next step
-        const car_status = false; // Default status for new car
-        let plateNumber = newPlateNumber.toUpperCase();
-        console.log("Sending data:", JSON.stringify({ plateNumber, user_id, car_status }))
-        const response = await fetch("http://192.168.4.183:8000/cars", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ plateNumber, user_id, car_status }),
-        });
-
-        const data = await response.json().catch(() => null);
-
-        if (!response.ok) {
-          // Handle registration error
-          console.error("Car registration failed:", data?.detail || response.statusText);
-          alert("Car registration failed. Please try again.");
-        } else {
-          const newPlate = {
-            plateNumber: newPlateNumber.toUpperCase(),
-          }
-          setRegisteredPlates([...registeredPlates, newPlate])
-          setPlateNumber(newPlateNumber.toUpperCase())
-          setNewPlateNumber("")
-          setShowAddNewPlate(false)
-        }
-      }
-
-    } catch (error) {
-      console.error("Registration error:", error);
-      alert("Registration failed. Please try again.");
+      const car = await api<{ plateNumber: string; nfcCode: string }>("/api/cars", "POST", {
+        plateNumber: newPlateNumber,
+      })
+      setRegisteredPlates((cars) => [...cars, { ...car, carStatus: false, activatedAt: null }])
+      setPlateNumber(car.plateNumber)
+      setNewPlateNumber("")
+      setShowAddNewPlate(false)
+      setError("")
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not add plate number")
     }
-    const newPlate = {
-      plateNumber: newPlateNumber.toUpperCase(),
-    }
-
-    setError("")
   }
 
   const formatDuration = (startDate: Date) => {
@@ -305,12 +124,12 @@ export default function ActivatePage() {
   useEffect(() => {
     if (isActive && activeSince) {
       const interval = setInterval(() => {
-        setActiveTimer((prev) => prev + 1);
-      }, 60000); // 60,000 ms = 1 minute
+        setActiveTimer((prev) => prev + 1)
+      }, 60000) // re-render every minute so the "active for" label updates
 
-      return () => clearInterval(interval);
+      return () => clearInterval(interval)
     }
-  }, [isActive, activeSince]);
+  }, [isActive, activeSince])
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] py-12">
@@ -323,7 +142,7 @@ export default function ActivatePage() {
         <Card className="max-w-md mx-auto shadow-lg">
           <CardHeader className={`text-white rounded-t-lg ${isActive ? "bg-[#4CAF50]" : "bg-[#00A86B]"}`}>
             <div className="flex items-center">
-              <Image src="/images/parksyde-logo.png" alt="ParkSyde Logo" width={36} height={36} className="mr-2" />
+              <Image src="/images/sd-logo.svg" alt="SD Car Sticker logo" width={36} height={36} className="mr-2" />
               <div>
                 <CardTitle className="text-2xl flex items-center">
                   {isActive ? <ShieldCheck className="mr-2 h-6 w-6" /> : <Car className="mr-2 h-6 w-6" />}
@@ -360,6 +179,7 @@ export default function ActivatePage() {
                       <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
                         {registeredPlates.map((plate) => (
                           <div
+                            key={plate.plateNumber}
                             className="flex items-center justify-between p-3 hover:bg-[#F5F5F5] cursor-pointer"
                             onClick={() => handleSelectPlate(plate.plateNumber)}
                           >
@@ -386,6 +206,16 @@ export default function ActivatePage() {
                   </div>
 
                   {error && !showPinInput && !showAddNewPlate && <p className="text-sm text-[#F44336]">{error}</p>}
+
+                  {registeredPlates.find((c) => c.plateNumber === plateNumber) && (
+                    <div className="text-xs text-[#212121]/70 break-all">
+                      <p className="font-medium text-[#212121]">Write this link to your NFC sticker:</p>
+                      <code>
+                        {typeof window !== "undefined" ? window.location.origin : ""}/blocked/scan?code=
+                        {registeredPlates.find((c) => c.plateNumber === plateNumber)?.nfcCode}
+                      </code>
+                    </div>
+                  )}
                 </div>
 
                 {showAddNewPlate && (

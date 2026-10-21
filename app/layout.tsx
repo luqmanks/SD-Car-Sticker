@@ -7,12 +7,11 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "ParkSyde - Double Parking Solution",
-  description: "Solve double parking issues with just a tap using NFC stickers",
+  title: "SD Car Sticker - Sime Darby Car Sticker",
+  description: "Sime Darby Car Sticker: solve double parking with just a tap using NFC stickers",
   icons: {
-    icon: "/images/parksyde-logo.png",
+    icon: "/images/sd-logo.svg",
   },
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({

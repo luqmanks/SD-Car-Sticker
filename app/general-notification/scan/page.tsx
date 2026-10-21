@@ -3,53 +3,50 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ChevronLeft, Scan, AlertCircle, LightbulbOff, Wallet, ShieldAlert, MessageSquare, Check } from "lucide-react"
+import { ChevronLeft, AlertCircle, LightbulbOff, Wallet, ShieldAlert, MessageSquare, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { StickerLookup, type CarRef } from "@/components/sticker-lookup"
+import { api } from "@/hooks/use-session"
 
 type AlertType = "lights" | "valuables" | "security" | "other"
 
 export default function GeneralNotificationScanPage() {
-  const [isScanning, setIsScanning] = useState(false)
   const [isScanned, setIsScanned] = useState(false)
+  const [carRef, setCarRef] = useState<CarRef>({})
   const [plateNumber, setPlateNumber] = useState("")
   const [alertType, setAlertType] = useState<AlertType>("lights")
   const [customMessage, setCustomMessage] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [error, setError] = useState("")
 
-  const handleScan = () => {
-    // In a real app, this would trigger the NFC scanning functionality
-    setIsScanning(true)
-
-    
-
-    // Simulate a scan after 2 seconds
-    setTimeout(async() => {
-      setIsScanning(false)
-      setIsScanned(true)
-      setPlateNumber("ABC1234") // This would be the actual plate number from the NFC
-      
-    }, 2000)
+  const handleResolve = (ref: CarRef) => {
+    setCarRef(ref)
+    setPlateNumber(ref.plate?.toUpperCase().replace(/[ \t]+/g, "") ?? "your selected car")
+    setIsScanned(true)
   }
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
-    
+    setIsSubmitting(true)
+    setError("")
     try {
-      const response = await fetch("http://192.168.4.183:8000/send-message-notify-owner"); // change URL if different
-      const data = await response.json();
-      console.log("Message send response:", data);
-      setIsSuccess(true);
-    } catch (error) {
-      console.error("Failed to send message:", error);
+      const data = await api<{ plateNumber: string }>("/api/notify", "POST", {
+        ...carRef,
+        type: alertType,
+        message: customMessage,
+      })
+      setPlateNumber(data.plateNumber)
+      setIsSuccess(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to send the alert")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const getAlertIcon = (type: AlertType) => {
     switch (type) {
@@ -101,7 +98,7 @@ export default function GeneralNotificationScanPage() {
         <Card className="max-w-md mx-auto shadow-lg">
           <CardHeader className="bg-[#FFC107] text-white rounded-t-lg">
             <div className="flex items-center">
-              <Image src="/images/parksyde-logo.png" alt="ParkSyde Logo" width={36} height={36} className="mr-2" />
+              <Image src="/images/sd-logo.svg" alt="SD Car Sticker logo" width={36} height={36} className="mr-2" />
               <div>
                 <CardTitle className="text-2xl flex items-center">
                   <AlertCircle className="mr-2 h-6 w-6" />
@@ -116,46 +113,7 @@ export default function GeneralNotificationScanPage() {
 
           <CardContent className="pt-6">
             {!isScanned && !isSuccess && (
-              <div className="space-y-6">
-                <div className="bg-[#F5F5F5] p-6 rounded-lg">
-                  <h3 className="font-bold text-[#212121] mb-4">How to send an alert:</h3>
-                  <ol className="text-sm text-[#212121] space-y-2">
-                    <li className="flex items-start">
-                      <span className="bg-[#FFC107] text-white rounded-full w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
-                        1
-                      </span>
-                      <span>Look for the NFC sticker on the windshield of the car</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="bg-[#FFC107] text-white rounded-full w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
-                        2
-                      </span>
-                      <span>Press the "Scan NFC" button below</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="bg-[#FFC107] text-white rounded-full w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
-                        3
-                      </span>
-                      <span>Hold your phone near the NFC sticker</span>
-                    </li>
-                  </ol>
-                </div>
-
-                <Button
-                  onClick={handleScan}
-                  disabled={isScanning}
-                  className="w-full bg-[#FFC107] hover:bg-[#e6ae06] text-white text-lg py-6"
-                >
-                  {isScanning ? "Scanning..." : "Scan NFC"}
-                  <Scan className="ml-2 h-5 w-5" />
-                </Button>
-
-                {isScanning && (
-                  <div className="text-center">
-                    <p className="text-[#212121]">Hold your phone near the NFC sticker...</p>
-                  </div>
-                )}
-              </div>
+              <StickerLookup buttonClass="bg-[#FFC107] hover:bg-[#e6ae06] text-white" onResolve={handleResolve} />
             )}
 
             {isScanned && !isSuccess && (
@@ -230,6 +188,7 @@ export default function GeneralNotificationScanPage() {
                   {isSubmitting ? "Sending..." : "Send Alert to Owner"}
                   <AlertCircle className="ml-2 h-5 w-5" />
                 </Button>
+                {error && <p className="text-sm text-[#F44336]">{error}</p>}
               </div>
             )}
 
@@ -279,7 +238,7 @@ export default function GeneralNotificationScanPage() {
                 ? "Your identity will remain anonymous when sending alerts"
                 : isSuccess
                   ? "Thank you for helping keep our community safe"
-                  : "Can't find an NFC sticker? The car might not be registered."}
+                  : "Can't find a sticker? The car might not be registered."}
             </p>
           </CardFooter>
         </Card>
