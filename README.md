@@ -160,6 +160,7 @@ Both flows accept the car in the URL, but the person still has to confirm before
 | `GET` | `/api/cars` | session | The signed-in user's cars, with status and `nfcCode` |
 | `POST` | `/api/cars` | session | Register a car (`plateNumber`) |
 | `PUT` | `/api/cars/status` | session + PIN | Turn double park mode on or off (`plateNumber`, `status`, `pin`) |
+| `GET` | `/api/cars/lookup?code=` or `?plate=` | none | Returns the car's `plateNumber` so scan pages can show it |
 | `POST` | `/api/notify` | none | SMS the owner. Body: `plate` or `code`, plus `type` (`blocked`, `lights`, `valuables`, `security`, `other`), and for `blocked` an optional `enquiry`, and `message` for custom text. Returns the `plateNumber` and the exact SMS `message` that was sent |
 
 ## Database
