@@ -12,6 +12,8 @@ type Props = {
   /** Tailwind classes for the primary button, e.g. the page's accent colour. */
   buttonClass: string
   onResolve: (ref: CarRef) => void
+  /** Label for the confirm button shown when a link pre-fills the car. */
+  resolveLabel?: string
 }
 
 // Web NFC isn't in the default TS DOM lib.
@@ -25,7 +27,7 @@ type NdefReaderCtor = new () => {
  * Identifies the car: a sticker URL opens this page with ?code=<nfc code>, Chrome on Android can
  * tap a sticker directly (Web NFC), and anyone can type the plate number as a fallback.
  */
-export function StickerLookup({ buttonClass, onResolve }: Props) {
+export function StickerLookup({ buttonClass, onResolve, resolveLabel = "Notify the owner" }: Props) {
   const [plate, setPlate] = useState("")
   const [nfcSupported, setNfcSupported] = useState(false)
   const [scanning, setScanning] = useState(false)
@@ -77,7 +79,7 @@ export function StickerLookup({ buttonClass, onResolve }: Props) {
           {linked.plate && <p className="text-2xl font-bold text-[#212121] tracking-wider">{linked.plate}</p>}
         </div>
         <Button onClick={() => onResolve(linked)} className={`w-full text-lg py-6 ${buttonClass}`}>
-          Notify the owner
+          {resolveLabel}
         </Button>
         <Button variant="ghost" className="w-full" onClick={() => setLinked(null)}>
           Not this car? Enter a different plate

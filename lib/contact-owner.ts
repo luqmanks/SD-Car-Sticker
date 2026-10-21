@@ -2,19 +2,20 @@ import "server-only"
 import { NextResponse } from "next/server"
 import { db } from "@/lib/supabase"
 import { findCar } from "@/lib/cars"
-import { resolveRecipient, type SendResult } from "@/lib/zavu"
+import { resolveRecipient, sendSms, type SendResult } from "@/lib/zavu"
 
 const COOLDOWN_SECONDS = 60
 
 /**
  * Flow for the anonymous notify endpoint: look up the car, enforce a per-car cooldown,
- * send the SMS through Zavu, and record the attempt in scan_events.
+ * send the SMS through Zavu, and record the attempt in scan_events. `compose` builds the full SMS text
+ * for the car's plate, and that same text is returned so the sender can see what the owner received.
  */
 export async function contactOwner(
   req: Request,
   kind: "sms",
   alertType: string,
-  send: (to: string, plate: string) => Promise<SendResult>,
+  compose: (plate: string) => string,
 ) {
   const { plate, code } = await req.json().catch(() => ({}))
   const car = await findCar({
@@ -40,7 +41,8 @@ export async function contactOwner(
   }
 
   const to = resolveRecipient(car.ownerPhone)
-  const result: SendResult = to ? await send(to, car.plateNumber) : { ok: false, error: "Invalid owner phone number" }
+  const message = compose(car.plateNumber)
+  const result: SendResult = to ? await sendSms(to, message) : { ok: false, error: "Invalid owner phone number" }
   await db()
     .from("scan_events")
     .insert({
@@ -59,5 +61,5 @@ export async function contactOwner(
       { status: 502 },
     )
   }
-  return NextResponse.json({ ok: true, plateNumber: car.plateNumber, doubleParkActive: car.carStatus })
+  return NextResponse.json({ ok: true, plateNumber: car.plateNumber, doubleParkActive: car.carStatus, message })
 }

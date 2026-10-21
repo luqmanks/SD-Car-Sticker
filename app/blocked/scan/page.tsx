@@ -1,20 +1,56 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ComponentType } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ChevronLeft, QrCode, Clock, Bell, AlertTriangle } from "lucide-react"
+import {
+  ChevronLeft,
+  QrCode,
+  Clock,
+  Bell,
+  AlertTriangle,
+  Car,
+  KeyRound,
+  CarFront,
+  Lightbulb,
+  DoorOpen,
+  Wallet,
+  Siren,
+  CircleAlert,
+  MessageSquare,
+  Check,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { StickerLookup, type CarRef } from "@/components/sticker-lookup"
 import { api } from "@/hooks/use-session"
 
-type Phase = "lookup" | "sending" | "notified"
+type Phase = "lookup" | "choose" | "sending" | "notified"
+
+// The ids must match ENQUIRIES in app/api/notify/route.ts. "" means just the blocked notification.
+const ENQUIRIES: { id: string; label: string; Icon: ComponentType<{ className?: string }> }[] = [
+  { id: "", label: "Just blocking me", Icon: Car },
+  { id: "keys", label: "Owner left car keys inside", Icon: KeyRound },
+  { id: "crash", label: "Someone crashed into the car", Icon: CarFront },
+  { id: "lights", label: "Owner forgot to turn off the lights", Icon: Lightbulb },
+  { id: "window", label: "Window or door left open", Icon: DoorOpen },
+  { id: "valuables", label: "Valuables visible inside", Icon: Wallet },
+  { id: "alarm", label: "Car alarm is going off", Icon: Siren },
+  { id: "tyre", label: "Flat tyre", Icon: CircleAlert },
+  { id: "other", label: "Custom message", Icon: MessageSquare },
+]
+
+const CUSTOM_MAX = 90
 
 export default function ScanPage() {
   const [phase, setPhase] = useState<Phase>("lookup")
   const [ref, setRef] = useState<CarRef>({})
+  const [enquiry, setEnquiry] = useState("")
+  const [customMessage, setCustomMessage] = useState("")
   const [plateNumber, setPlateNumber] = useState("")
+  const [sentMessage, setSentMessage] = useState("")
   const [error, setError] = useState("")
   const [scanTime, setScanTime] = useState<Date | null>(null)
   const [elapsedTime, setElapsedTime] = useState("00:00")
@@ -31,18 +67,33 @@ export default function ScanPage() {
     return () => clearInterval(interval)
   }, [scanTime])
 
-  const notifyOwner = async (carRef: CarRef) => {
+  const selected = ENQUIRIES.find((e) => e.id === enquiry) ?? ENQUIRIES[0]
+  const customMissing = enquiry === "other" && !customMessage.trim()
+
+  const handleResolve = (carRef: CarRef) => {
     setRef(carRef)
+    setPlateNumber(carRef.plate ?? "")
+    setError("")
+    setPhase("choose")
+  }
+
+  const notifyOwner = async () => {
     setError("")
     setPhase("sending")
     try {
-      const data = await api<{ plateNumber: string }>("/api/notify", "POST", { ...carRef, type: "blocked" })
+      const data = await api<{ plateNumber: string; message: string }>("/api/notify", "POST", {
+        ...ref,
+        type: "blocked",
+        enquiry,
+        message: customMessage,
+      })
       setPlateNumber(data.plateNumber)
+      setSentMessage(data.message)
       setScanTime(new Date())
       setPhase("notified")
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong")
-      setPhase("lookup")
+      setPhase("choose")
     }
   }
 
@@ -50,7 +101,7 @@ export default function ScanPage() {
     setRemindState("sending")
     setRemindError("")
     try {
-      await api("/api/notify", "POST", { plate: plateNumber, type: "blocked" })
+      await api("/api/notify", "POST", { plate: plateNumber, type: "blocked", enquiry, message: customMessage })
       setRemindState("sent")
     } catch (e) {
       setRemindError(e instanceof Error ? e.message : "Could not send the reminder")
@@ -59,6 +110,7 @@ export default function ScanPage() {
   }
 
   const notified = phase === "notified"
+  const choosing = phase === "choose" || phase === "sending"
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] py-12">
@@ -68,33 +120,118 @@ export default function ScanPage() {
           Back to Home
         </Link>
 
-        <Card className="max-w-md mx-auto shadow-lg">
+        <Card className={`mx-auto shadow-lg ${choosing ? "max-w-2xl" : "max-w-md"}`}>
           <CardHeader className={`text-white rounded-t-lg ${notified ? "bg-[#4CAF50]" : "bg-[#00A86B]"}`}>
             <div className="flex items-center">
               <Image src="/images/sd-logo.svg" alt="SD Car Sticker logo" width={36} height={36} className="mr-2" />
               <div>
                 <CardTitle className="text-2xl flex items-center">
                   {notified ? <Clock className="mr-2 h-6 w-6" /> : <QrCode className="mr-2 h-6 w-6" />}
-                  {notified ? "Owner Notified" : "Find the Car Owner"}
+                  {notified ? "Owner Notified" : choosing ? "Notify the Car Owner" : "Find the Car Owner"}
                 </CardTitle>
                 <CardDescription className="text-white/90">
                   {notified
                     ? "The car owner has been sent an SMS"
-                    : "Tap the NFC sticker on the car blocking you"}
+                    : choosing
+                      ? "Pick what the owner needs to know, then notify them"
+                      : "Tap the NFC sticker on the car blocking you"}
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
 
           <CardContent className="pt-6">
-            {phase !== "notified" && (
-              <div className="space-y-4">
-                {error && <p className="text-sm text-[#F44336] bg-[#F44336]/10 p-3 rounded-md">{error}</p>}
-                {phase === "sending" ? (
-                  <p className="text-center text-[#212121] py-8">Notifying the owner...</p>
-                ) : (
-                  <StickerLookup buttonClass="bg-[#00A86B] hover:bg-[#008f5b]" onResolve={notifyOwner} />
-                )}
+            {phase === "lookup" && (
+              <StickerLookup
+                buttonClass="bg-[#00A86B] hover:bg-[#008f5b]"
+                onResolve={handleResolve}
+                resolveLabel="Continue"
+              />
+            )}
+
+            {choosing && (
+              <div className="grid gap-6 md:grid-cols-[1fr_14rem]">
+                {/* Left: enquiry */}
+                <div className="space-y-3">
+                  <h3 className="font-bold text-[#212121]">Enquiry</h3>
+                  <div role="radiogroup" aria-label="Enquiry" className="space-y-2">
+                    {ENQUIRIES.map(({ id, label, Icon }) => {
+                      const active = enquiry === id
+                      return (
+                        <button
+                          key={id || "none"}
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          disabled={phase === "sending"}
+                          onClick={() => setEnquiry(id)}
+                          className={`flex w-full items-center rounded-lg border p-3 text-left text-sm transition-colors ${
+                            active
+                              ? "border-[#00A86B] bg-[#00A86B]/10 text-[#212121] font-medium"
+                              : "border-[#E0E0E0] bg-white text-[#212121] hover:bg-[#F5F5F5]"
+                          }`}
+                        >
+                          <Icon className="mr-2 h-5 w-5 flex-shrink-0 text-[#00A86B]" />
+                          <span className="flex-1">{label}</span>
+                          {active && <Check className="h-4 w-4 text-[#00A86B]" />}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {enquiry === "other" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="customMessage">Your message to the owner</Label>
+                      <Textarea
+                        id="customMessage"
+                        placeholder="e.g., Your boot is not closed properly"
+                        maxLength={CUSTOM_MAX}
+                        value={customMessage}
+                        onChange={(e) => setCustomMessage(e.target.value)}
+                        disabled={phase === "sending"}
+                        className="min-h-[90px]"
+                      />
+                      <p className="text-xs text-[#212121]/70">
+                        {customMessage.length}/{CUSTOM_MAX} characters. Links aren&apos;t allowed.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right: notify */}
+                <div className="space-y-4 md:self-start">
+                  <div className="bg-[#F5F5F5] p-4 rounded-lg space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-[#212121]">Car:</span>
+                      <span className="font-bold text-[#212121]">{ref.plate ?? "SD Car Sticker"}</span>
+                    </div>
+                    <div className="text-sm text-[#212121]">
+                      <span>Reason: </span>
+                      <span className="font-bold">{selected.label}</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={notifyOwner}
+                    disabled={phase === "sending" || customMissing}
+                    className="w-full bg-[#00A86B] hover:bg-[#008f5b] text-lg py-6"
+                  >
+                    {phase === "sending" ? "Notifying..." : "Notify the owner"}
+                    <Bell className="ml-2 h-5 w-5" />
+                  </Button>
+                  {error && <p className="text-sm text-[#F44336] bg-[#F44336]/10 p-3 rounded-md">{error}</p>}
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    disabled={phase === "sending"}
+                    onClick={() => {
+                      setPhase("lookup")
+                      setError("")
+                    }}
+                  >
+                    Not this car?
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -111,6 +248,10 @@ export default function ScanPage() {
                       <span className="text-sm font-bold text-[#212121]">{plateNumber}</span>
                     </div>
                     <div className="flex justify-between">
+                      <span className="text-sm text-[#212121]">Reason:</span>
+                      <span className="text-sm font-bold text-[#212121]">{selected.label}</span>
+                    </div>
+                    <div className="flex justify-between">
                       <span className="text-sm text-[#212121]">Waiting time:</span>
                       <span className="text-sm font-bold text-[#212121] flex items-center">
                         <Clock className="mr-1 h-4 w-4 text-[#FFC107]" />
@@ -118,6 +259,13 @@ export default function ScanPage() {
                       </span>
                     </div>
                   </div>
+                </div>
+
+                <div className="bg-[#F5F5F5] p-6 rounded-lg">
+                  <h3 className="font-bold text-[#212121] mb-2">Message sent to the owner</h3>
+                  <p className="text-sm text-[#212121] bg-white border border-[#E0E0E0] rounded-lg p-3 break-words">
+                    {sentMessage}
+                  </p>
                 </div>
 
                 <div className="bg-[#F5F5F5] p-6 rounded-lg">

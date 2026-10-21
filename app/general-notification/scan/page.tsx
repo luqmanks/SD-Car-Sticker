@@ -18,6 +18,7 @@ export default function GeneralNotificationScanPage() {
   const [isScanned, setIsScanned] = useState(false)
   const [carRef, setCarRef] = useState<CarRef>({})
   const [plateNumber, setPlateNumber] = useState("")
+  const [sentMessage, setSentMessage] = useState("")
   const [alertType, setAlertType] = useState<AlertType>("lights")
   const [customMessage, setCustomMessage] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -34,12 +35,13 @@ export default function GeneralNotificationScanPage() {
     setIsSubmitting(true)
     setError("")
     try {
-      const data = await api<{ plateNumber: string }>("/api/notify", "POST", {
+      const data = await api<{ plateNumber: string; message: string }>("/api/notify", "POST", {
         ...carRef,
         type: alertType,
         message: customMessage,
       })
       setPlateNumber(data.plateNumber)
+      setSentMessage(data.message)
       setIsSuccess(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to send the alert")
@@ -215,6 +217,13 @@ export default function GeneralNotificationScanPage() {
                       </span>
                     </div>
                   </div>
+                </div>
+
+                <div className="bg-[#F5F5F5] p-4 rounded-lg">
+                  <h3 className="font-medium text-[#212121] mb-2">Message sent to the owner:</h3>
+                  <p className="text-sm text-[#212121] bg-white border border-[#E0E0E0] rounded-lg p-3 break-words">
+                    {sentMessage}
+                  </p>
                 </div>
 
                 <div className="space-y-4">
