@@ -62,7 +62,6 @@
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-pip install python-jose requests twilio   # used by the code, see note below
 ```
 
 Create a `.env` file in the project root:
@@ -87,8 +86,6 @@ uvicorn main:app --host 0.0.0.0 --reload --port 8000
 ```
 
 Interactive docs are at `http://localhost:8000/docs`.
-
-> `requirements.txt` still lists several incorrect or duplicate entries (`jose`, `jwt`, `JWTError`, `jose-python`) and omits `python-jose`, `requests` and `twilio`, which the code imports. Clean it up before deploying.
 
 ### 2. Frontend
 
