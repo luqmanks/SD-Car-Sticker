@@ -1,64 +1,19 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link"
 import Image from "next/image"
 import { Car, QrCode, Bell, ArrowRight, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useSession } from "@/hooks/use-session"
 
 
 export default function Home() {
   const [showCarOwnerOptions, setShowCarOwnerOptions] = useState(false);
-  const [isAuthenticatedState, setIsAuthenticatedState] = useState(false);
-  const [user, setUser] = useState({
-      email: "",
-      user_id: "",
-      pin_number: "",
-      phone_number: ""
-    });
+  const { user, logout } = useSession();
+  const isAuthenticatedState = !!user;
 
-  useEffect(() => {
-    const checkAuthentication = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setIsAuthenticatedState(false);
-          return;
-        }
-
-        const response = await fetch("http://192.168.4.183:8000/is_authenticated", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const user = await response.json();
-          setUser(user);
-          console.log("User is authenticated:", user);
-          setIsAuthenticatedState(true);
-        } else {
-          setUser({
-            email: "",
-            user_id: "",
-            pin_number: "",
-            phone_number: ""
-          });
-          setIsAuthenticatedState(false);
-        }
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-        setIsAuthenticatedState(false);
-      }
-    };
-
-    checkAuthentication();
-  });
-
-  const isAuthenticated = () => {
-    return isAuthenticatedState;
-  };
+  const isAuthenticated = () => isAuthenticatedState;
 
   // Close dropdown when clicking outside
   const handleClickOutside = () => {
@@ -73,8 +28,8 @@ export default function Home() {
       <header className="bg-[#00A86B] text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center">
-            <Image src="/images/parksyde-logo.png" alt="ParkSyde Logo" width={40} height={40} className="mr-2" />
-            <h1 className="text-2xl font-bold">ParkSyde</h1>
+            <Image src="/images/sd-logo.svg" alt="SD Car Sticker logo" width={40} height={40} className="mr-2" />
+            <h1 className="text-2xl font-bold">SD Car Sticker</h1>
           </div>
           <nav>
             <ul className="flex space-x-4">
@@ -86,12 +41,8 @@ export default function Home() {
                 )}
                 {isAuthenticatedState && (
                   <li>
-                    <span className="mr-2">{user.email}</span>
-                    <Button onClick={() => {
-                      localStorage.removeItem("token");
-                      setIsAuthenticatedState(false);
-                      window.location.href = "/";
-                    }} variant="ghost">
+                    <span className="mr-2">{user?.email}</span>
+                    <Button onClick={logout} variant="ghost">
                       Logout
                     </Button>
                   </li>
@@ -106,8 +57,8 @@ export default function Home() {
       <section className="container mx-auto px-4 py-16 text-center">
         <div className="flex justify-center mb-8">
           <Image
-            src="/images/parksyde-logo.png"
-            alt="ParkSyde Logo"
+            src="/images/sd-logo.svg"
+            alt="SD Car Sticker logo"
             width={120}
             height={120}
             className="rounded-xl shadow-md"
@@ -224,7 +175,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center text-[#212121] mb-6">More Than Just Double Parking</h2>
           <p className="text-center text-[#212121] mb-12 max-w-2xl mx-auto">
-            ParkSyde also helps you alert car owners about other issues like lights left on, exposed valuables, or
+            SD Car Sticker also helps you alert car owners about other issues like lights left on, exposed valuables, or
             security concerns.
           </p>
 
@@ -305,9 +256,10 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="flex items-center">
-              <Image src="/images/parksyde-logo.png" alt="ParkSyde Logo" width={50} height={50} className="mr-3" />
+              <Image src="/images/sd-logo.svg" alt="SD Car Sticker logo" width={50} height={50} className="mr-3" />
               <div>
-                <h3 className="text-xl font-bold mb-2">ParkSyde</h3>
+                <h3 className="text-xl font-bold mb-2">SD Car Sticker</h3>
+                <p className="text-sm text-white/80 mb-1">by Sime Darby</p>
                 <p>Making double parking manageable for everyone.</p>
               </div>
             </div>
@@ -345,13 +297,13 @@ export default function Home() {
 
             <div>
               <h3 className="text-xl font-bold mb-4">Contact</h3>
-              <p>support@parksyde.com</p>
+              <p>support@sdcarsticker.com</p>
               <p>+60 12-345-6789</p>
             </div>
           </div>
 
           <div className="border-t border-white/20 mt-8 pt-8 text-center">
-            <p>&copy; {new Date().getFullYear()} ParkSyde. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} SD Car Sticker, Sime Darby. All rights reserved.</p>
           </div>
         </div>
       </footer>
