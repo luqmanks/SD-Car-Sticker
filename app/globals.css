@@ -2,67 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Sime Darby palette, as HSL channels for shadcn tokens
+  red     #e93b30  ->  4 81% 55%
+  orange  #f48436  ->  25 90% 58%
+  apricot #fbbc76  ->  32 94% 72%
+  coral   #f46c6c  ->  0 86% 69%
+  blush   #f49c9c  ->  0 80% 78%
+  ink     #2a1512  ->  8 40% 12%
+  paper   #fff7ef  ->  30 100% 97%
+*/
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 30 100% 97%;
+    --foreground: 8 40% 12%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 30 100% 98.5%;
+    --card-foreground: 8 40% 12%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 30 100% 98.5%;
+    --popover-foreground: 8 40% 12%;
 
-    --primary: 159 100% 33%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 4 81% 55%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 32 94% 72%;
+    --secondary-foreground: 8 40% 12%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 25 60% 92%;
+    --muted-foreground: 8 20% 38%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 25 90% 58%;
+    --accent-foreground: 8 40% 12%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 358 72% 38%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 159 100% 33%;
+    --border: 8 25% 80%;
+    --input: 8 25% 80%;
+    --ring: 4 81% 55%;
 
-    --radius: 0.5rem;
+    --radius: 0.25rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 8 40% 8%;
+    --foreground: 30 100% 97%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 8 35% 11%;
+    --card-foreground: 30 100% 97%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 8 35% 11%;
+    --popover-foreground: 30 100% 97%;
 
-    --primary: 159 100% 33%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 4 81% 58%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 25 60% 22%;
+    --secondary-foreground: 30 100% 97%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 8 25% 18%;
+    --muted-foreground: 20 25% 70%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 25 80% 40%;
+    --accent-foreground: 30 100% 97%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 358 65% 45%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 159 100% 33%;
+    --border: 8 25% 22%;
+    --input: 8 25% 22%;
+    --ring: 4 81% 58%;
   }
 }
 
@@ -72,5 +83,30 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-archivo), system-ui, sans-serif;
+  }
+}
+
+/* NFC waves on the hero sticker: one reveal on page load */
+@keyframes nfc-wave {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.nfc-wave {
+  opacity: 0;
+  animation: nfc-wave 0.5s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nfc-wave {
+    opacity: 1;
+    animation: none;
   }
 }
