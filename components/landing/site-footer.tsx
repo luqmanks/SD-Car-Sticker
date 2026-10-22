@@ -52,13 +52,13 @@ export function SiteFooter() {
               <span
                 data-btn
                 data-shadow="#e93b30"
-                className="relative flex w-full items-center justify-center rounded-lg bg-[#fff7ef] px-8 py-2.5 text-[#2a1512] md:inline-flex md:w-auto"
+                className="relative flex w-full items-center justify-center rounded-lg bg-[#fff7ef] px-7 py-2.5 text-[#2a1512] sm:px-8 md:inline-flex md:w-auto"
               >
                 <span
                   aria-hidden="true"
                   className="absolute left-3 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#2a1512]/40"
                 />
-                <span className={`${display} text-lg`}>
+                <span className={`${display} text-base sm:text-lg`}>
                   support@sdcarsticker.com
                 </span>
                 <span

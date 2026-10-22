@@ -77,7 +77,7 @@ function CarPark() {
   return (
     <svg
       viewBox="0 0 640 420"
-      className="h-auto w-full"
+      className="h-[16svh] w-full grow md:h-auto md:grow-0"
       role="img"
       aria-label="A car park from above. A double-parked car with an NFC sticker is blocking two parked cars in."
     >
@@ -219,8 +219,8 @@ export function Hero() {
     { scope: root },
   );
 
-  const card = `group flex w-full items-center justify-between gap-4 px-5 py-4 text-left ${focusLight}`;
-  const arrow = "h-5 w-5 shrink-0";
+  const card = `group flex w-full items-center justify-between gap-3 px-4 py-3 text-left md:gap-4 md:px-5 md:py-4 ${focusLight}`;
+  const arrow = "h-5 w-5 shrink-0 max-md:[@media(max-height:760px)]:hidden";
 
   return (
     <section ref={root} className={`${screen} bg-[#2a1512] text-[#fff7ef]`}>
@@ -260,11 +260,13 @@ export function Hero() {
         </div>
       </header>
 
-      <div className={`${wrap} pb-10 pt-24`}>
-        <div className="grid items-center gap-8 lg:grid-cols-[1fr_30rem] lg:gap-14">
+      <div
+        className={`${wrap} flex flex-1 flex-col pb-5 pt-[4.5rem] md:block md:flex-none md:pb-10 md:pt-24`}
+      >
+        <div className="flex flex-col gap-3 max-md:flex-1 md:grid md:items-center md:gap-8 lg:grid-cols-[1fr_30rem] lg:gap-14">
           <div>
             <h1
-              className={`${display} text-[clamp(2.25rem,4.8vw,4rem)] leading-[1]`}
+              className={`${display} text-[clamp(2rem,4.8vw,4rem)] leading-[1]`}
             >
               <span className="-mb-[0.12em] block overflow-hidden pb-[0.12em]">
                 <span className="hero-line block">Blocked in?</span>
@@ -273,49 +275,53 @@ export function Hero() {
                 <span className="hero-line block">Tap the sticker.</span>
               </span>
             </h1>
-            <p className="hero-copy mt-5 max-w-md text-base leading-relaxed text-[#fff7ef]/85 md:text-lg">
+            <p className="hero-copy mt-2 max-w-md text-sm leading-snug text-[#fff7ef]/85 max-md:[@media(max-height:760px)]:hidden md:mt-5 md:text-lg md:leading-relaxed">
               Register once, stick it on your windshield, and anyone you are
               blocking can reach you in seconds. No honking, no hunting for the
               owner.
             </p>
           </div>
 
-          <div>
-            <div className="relative overflow-hidden rounded-2xl bg-[#3a221d] p-3">
+          <div className="mx-auto flex w-full max-w-[34rem] flex-col max-md:flex-1 md:block lg:max-w-none">
+            <div className="relative flex flex-col overflow-hidden rounded-2xl bg-[#3a221d] p-2 max-md:flex-1 md:block md:p-3">
               <CarPark />
               <div
                 role="status"
-                className="hp-notif absolute bottom-4 right-4 opacity-0 w-[62%] rounded-2xl bg-[#fff7ef] p-3 text-[#2a1512] shadow-[0_6px_0_rgba(0,0,0,.25)]"
+                className="hp-notif relative mt-2 w-full opacity-0 sm:absolute sm:bottom-4 sm:right-4 sm:mt-0 sm:w-[62%] rounded-2xl bg-[#fff7ef] p-2.5 text-[#2a1512] sm:p-3 shadow-[0_6px_0_rgba(0,0,0,.25)]"
               >
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 text-sm max-md:[@media(max-height:760px)]:hidden">
                   <span
                     className="h-4 w-4 rounded bg-[#e93b30]"
                     aria-hidden="true"
                   />
                   <span>SydePark, now</span>
                 </div>
-                <p className={`${display} mt-1 text-base leading-snug`}>
+                <p
+                  className={`${display} text-sm leading-snug sm:mt-1 sm:text-base`}
+                >
                   Someone is blocked behind your car
                 </p>
-                <p className="text-sm">Please move it when you can.</p>
+                <p className="hidden text-sm sm:block">
+                  Please move it when you can.
+                </p>
               </div>
             </div>
             <button
               onClick={() => tapRef.current?.restart()}
-              className={`mt-2 text-sm underline underline-offset-4 hover:text-[#fbbc76] ${focusLight}`}
+              className={`mt-2 hidden text-sm underline underline-offset-4 hover:text-[#fbbc76] sm:block ${focusLight}`}
             >
               Replay the tap
             </button>
           </div>
         </div>
 
-        <div className="mt-8 grid items-start gap-3 md:grid-cols-[1.5fr_1fr_1fr]">
+        <div className="mt-3 grid gap-2 max-md:flex-1 max-md:grid-rows-[1fr] md:mt-8 md:items-start max-md:[@media(max-height:760px)]:grid-cols-2 md:grid-cols-[1.5fr_1fr_1fr] md:gap-3">
           <Link
             href="/blocked/scan"
             data-btn
             data-rest-shadow="6px 6px 0px 0px #fbbc76"
             data-hover-shadow="8px 12px 0px 0px #fbbc76"
-            className={`${card} hero-card bg-[#d2332a] py-6 text-white md:min-h-[8.75rem]`}
+            className={`${card} hero-card max-md:[@media(max-height:760px)]:col-span-2 bg-[#d2332a] py-5 text-white max-md:min-h-[6.75rem] max-md:!shadow-none md:min-h-[8.75rem] md:py-6`}
           >
             <span>
               <span className={`${display} block text-3xl`}>I'm blocked</span>
@@ -323,10 +329,13 @@ export function Hero() {
                 Scan the sticker on the car in your way
               </span>
             </span>
-            <ArrowUpRight className="h-7 w-7 shrink-0" data-arrow />
+            <ArrowUpRight
+              className="h-8 w-8 shrink-0 md:h-7 md:w-7"
+              data-arrow
+            />
           </Link>
 
-          <div className="hero-card">
+          <div className="hero-card relative">
             <button
               onClick={onOwnerClick}
               aria-expanded={isAuthenticated ? ownerOpen : undefined}
@@ -335,17 +344,17 @@ export function Hero() {
               className={`${card} bg-[#fbbc76] text-[#2a1512] md:min-h-[8.25rem]`}
             >
               <span>
-                <span className={`${display} block text-xl`}>
+                <span className={`${display} block text-lg md:text-xl`}>
                   I'm a car owner
                 </span>
-                <span className="block text-[15px]">
+                <span className="block text-sm max-md:[@media(max-height:760px)]:hidden md:text-[15px]">
                   Register a car or switch on double park mode
                 </span>
               </span>
               <ArrowUpRight className={arrow} data-arrow />
             </button>
             {isAuthenticated && ownerOpen && (
-              <div className="grid gap-px bg-[#2a1512]">
+              <div className="grid gap-px bg-[#2a1512] max-md:absolute max-md:bottom-full max-md:left-0 max-md:z-20 max-md:mb-1 max-md:w-[min(20rem,calc(100vw-3rem))]">
                 <Link
                   href="/car-owner/register"
                   className={`bg-[#fff7ef] px-5 py-3 text-[#2a1512] hover:bg-white ${focusLight}`}
@@ -377,10 +386,10 @@ export function Hero() {
             className={`${card} hero-card bg-[#fff7ef] text-[#2a1512] md:min-h-[6.5rem]`}
           >
             <span>
-              <span className={`${display} block text-xl`}>
+              <span className={`${display} block text-lg md:text-xl`}>
                 I spotted a problem
               </span>
-              <span className="block text-[15px]">
+              <span className="block text-sm max-md:[@media(max-height:760px)]:hidden md:text-[15px]">
                 Send a car alert to the owner
               </span>
             </span>
