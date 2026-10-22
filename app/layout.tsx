@@ -18,11 +18,38 @@ const archivo = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "SD Car Sticker - Sime Darby Car Sticker",
+  // Set NEXT_PUBLIC_SITE_URL to your live domain so link previews (WhatsApp, etc.) get absolute image URLs
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  ),
+  title: "SydePark - Double parking, solved with a tap",
   description:
-    "Sime Darby Car Sticker: solve double parking with just a tap using NFC stickers",
+    "SydePark by Sime Darby: solve double parking with just a tap using NFC stickers",
   icons: {
-    icon: "/images/sd-logo.svg",
+    icon: [
+      { url: "/images/sydepark-logo.svg", type: "image/svg+xml" },
+      {
+        url: "/images/sydepark-logo-512.png",
+        type: "image/png",
+        sizes: "512x512",
+      },
+    ],
+    apple: "/images/sydepark-logo-512.png",
+  },
+  openGraph: {
+    title: "SydePark - Double parking, solved with a tap",
+    description:
+      "Register once, stick it on your windshield, and anyone you block can reach you in seconds.",
+    siteName: "SydePark",
+    images: [
+      {
+        url: "/images/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "SydePark",
+      },
+    ],
+    type: "website",
   },
 };
 
