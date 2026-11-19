@@ -3,10 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { api } from "@/hooks/use-session";
 
 export default function RegisterPage() {
@@ -26,23 +33,38 @@ export default function RegisterPage() {
       router.push("/car-owner/register");
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Registration failed. Please try again.");
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Registration failed. Please try again.",
+      );
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-[#F5F5F5] px-4">
-      <Card className="w-full max-w-[450px]">
-        <CardHeader>
-          <div className="flex items-center">
-            <Image src="/images/sd-logo.svg" alt="SD Car Sticker logo" width={36} height={36} className="mr-2" />
-            <CardTitle>Create your SD Car Sticker account</CardTitle>
+    <div className="flex justify-center items-center min-h-screen bg-background p-4 sm:p-8">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-3">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/images/sydepark-logo.svg"
+              alt="SD Car Sticker logo"
+              width={40}
+              height={40}
+              className="shrink-0"
+            />
+            <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">
+              Create your account
+            </CardTitle>
           </div>
+          <CardDescription className="text-muted-foreground">
+            Sign up to manage your SD Car Stickers easily.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -52,6 +74,7 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="w-full focus-visible:ring-primary"
                 />
               </div>
               <div className="space-y-2">
@@ -64,15 +87,31 @@ export default function RegisterPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   minLength={8}
                   required
+                  className="w-full focus-visible:ring-primary"
                 />
               </div>
-              {error && <p className="text-sm text-[#F44336]">{error}</p>}
-              <Button type="submit" disabled={submitting} className="bg-[#00A86B] hover:bg-[#008f5b]">
-                {submitting ? "Creating account..." : "Register"}
-              </Button>
-              <div className="text-sm text-gray-500 mt-2">
-                Already have an account? <a href="/login" className="underline">Login</a>
-              </div>
+            </div>
+
+            {error && (
+              <p className="text-sm font-medium text-destructive">{error}</p>
+            )}
+
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="w-full transition-all"
+            >
+              {submitting ? "Creating account..." : "Register"}
+            </Button>
+
+            <div className="text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="font-medium text-primary hover:underline transition-colors"
+              >
+                Login here
+              </Link>
             </div>
           </form>
         </CardContent>

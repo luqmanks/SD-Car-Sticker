@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="SydePark">
+  <title>SydePark</title>
+  <rect width="128" height="128" rx="28" fill="#e93b30"/>
+  <g transform="translate(-4 0)">
+    <!-- a car seen from above, nose up -->
+    <rect x="30" y="49" width="4" height="8" rx="1.5" fill="#fff7ef"/>
+    <rect x="66" y="49" width="4" height="8" rx="1.5" fill="#fff7ef"/>
+    <rect x="34" y="30" width="32" height="68" rx="11" fill="#fff7ef"/>
+    <rect x="39" y="42" width="22" height="11" rx="3.5" fill="#2a1512" opacity=".88"/>
+    <rect x="39" y="60" width="22" height="16" rx="5" fill="#2a1512" opacity=".12"/>
+    <rect x="40" y="83" width="20" height="7" rx="3" fill="#2a1512" opacity=".88"/>
+    <!-- the sticker on the windshield -->
+    <circle cx="50" cy="47.5" r="3.2" fill="#e93b30"/>
+    <!-- signal waves leaving the sticker -->
+    <g fill="none" stroke-linecap="round" stroke-width="6.5">
+      <path d="M79 49a16 16 0 0 1 0 24" stroke="#fff7ef"/>
+      <path d="M87 41a28 28 0 0 1 0 40" stroke="#fff7ef"/>
+      <path d="M95 33a40 40 0 0 1 0 56" stroke="#fbbc76"/>
+    </g>
+  </g>
+</svg>

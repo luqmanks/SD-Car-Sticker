@@ -1,16 +1,22 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { ChevronLeft, Package, CreditCard, Truck } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import type React from "react";
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { ChevronLeft, Package, CreditCard, Truck, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function OrderNFCPage() {
   const [formData, setFormData] = useState({
@@ -18,104 +24,114 @@ export default function OrderNFCPage() {
     plateNumber: "",
     address: "",
     phoneNumber: "",
-  })
+  });
   const [errors, setErrors] = useState({
     name: "",
     plateNumber: "",
     address: "",
     phoneNumber: "",
-  })
+  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-
-    // Clear error when typing
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name as keyof typeof errors]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }))
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
-  }
+  };
 
   const validateForm = () => {
-    const newErrors = { ...errors }
-    let isValid = true
+    const newErrors = { ...errors };
+    let isValid = true;
 
     if (!formData.name.trim()) {
-      newErrors.name = "Name is required"
-      isValid = false
+      newErrors.name = "Name is required";
+      isValid = false;
     }
-
     if (!formData.plateNumber.trim()) {
-      newErrors.plateNumber = "Plate number is required"
-      isValid = false
+      newErrors.plateNumber = "Plate number is required";
+      isValid = false;
     }
-
     if (!formData.address.trim()) {
-      newErrors.address = "Address is required"
-      isValid = false
+      newErrors.address = "Address is required";
+      isValid = false;
     }
-
     if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = "Phone number is required"
-      isValid = false
+      newErrors.phoneNumber = "Phone number is required";
+      isValid = false;
     } else if (!/^\+?[0-9]{10,15}$/.test(formData.phoneNumber.trim())) {
-      newErrors.phoneNumber = "Please enter a valid phone number"
-      isValid = false
+      newErrors.phoneNumber = "Please enter a valid phone number";
+      isValid = false;
     }
 
-    setErrors(newErrors)
-    return isValid
-  }
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (validateForm()) {
-      // In a real app, we would submit the order to the server here
-      // For now, we'll just redirect to the success page
-      window.location.href = "/car-owner/order/success"
+      window.location.href = "/car-owner/order/success";
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] py-12">
-      <div className="container mx-auto px-4">
-        <Link href="/" className="inline-flex items-center text-[#00A86B] mb-6 hover:underline">
+    <div className="min-h-screen bg-background/50 py-8 px-4 sm:py-12">
+      <div className="container mx-auto max-w-5xl">
+        <Link
+          href="/"
+          className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-6 transition-colors"
+        >
           <ChevronLeft className="mr-1 h-4 w-4" />
           Back to Home
         </Link>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
-            <Card className="shadow-lg">
-              <CardHeader className="bg-[#00A86B] text-white rounded-t-lg">
-                <div className="flex items-center">
-                  <Image src="/images/sd-logo.svg" alt="SD Car Sticker logo" width={36} height={36} className="mr-2" />
+        {/* Removed items-start to allow grid items to stretch to equal height */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+          {/* Main Checkout Form */}
+          <div className="lg:col-span-2">
+            <Card className="shadow-lg border-border/50 overflow-hidden h-full flex flex-col">
+              <CardHeader className="bg-primary/10 border-b border-primary/20 pb-6">
+                <div className="flex items-center gap-3">
+                  <Image
+                    src="/images/sydepark-logo.svg"
+                    alt="SD Car Sticker logo"
+                    width={44}
+                    height={44}
+                    className="shrink-0 drop-shadow-sm"
+                  />
                   <div>
-                    <CardTitle className="text-2xl flex items-center">
-                      <Package className="mr-2 h-6 w-6" />
-                      Order NFC Sticker
+                    <CardTitle className="text-xl sm:text-2xl flex items-center text-foreground">
+                      <Package className="mr-2 h-6 w-6 text-primary" />
+                      Shipping Details
                     </CardTitle>
-                    <CardDescription className="text-white/90">
-                      Get your NFC sticker delivered to your doorstep
+                    <CardDescription className="text-muted-foreground mt-1">
+                      Enter your details to get your NFC sticker delivered.
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
 
-              <CardContent className="pt-6">
-                <form onSubmit={handleSubmit}>
-                  <div className="space-y-4">
+              <CardContent className="pt-8 flex-grow">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
                       <Input
                         id="name"
                         name="name"
-                        placeholder="Enter your full name"
+                        placeholder="e.g., John Doe"
                         value={formData.name}
                         onChange={handleChange}
-                        className={errors.name ? "border-[#F44336]" : ""}
+                        className={`transition-all ${errors.name ? "border-destructive focus-visible:ring-destructive" : "focus-visible:ring-primary"}`}
                       />
-                      {errors.name && <p className="text-sm text-[#F44336]">{errors.name}</p>}
+                      {errors.name && (
+                        <p className="text-sm font-medium text-destructive">
+                          {errors.name}
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -123,44 +139,60 @@ export default function OrderNFCPage() {
                       <Input
                         id="plateNumber"
                         name="plateNumber"
-                        placeholder="e.g., ABC1234"
+                        placeholder="e.g., ABC 1234"
                         value={formData.plateNumber}
                         onChange={handleChange}
-                        className={errors.plateNumber ? "border-[#F44336]" : ""}
+                        className={`uppercase transition-all ${errors.plateNumber ? "border-destructive focus-visible:ring-destructive" : "focus-visible:ring-primary"}`}
                       />
-                      {errors.plateNumber && <p className="text-sm text-[#F44336]">{errors.plateNumber}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Delivery Address</Label>
-                      <Textarea
-                        id="address"
-                        name="address"
-                        placeholder="Enter your full address"
-                        rows={3}
-                        value={formData.address}
-                        onChange={handleChange}
-                        className={errors.address ? "border-[#F44336]" : ""}
-                      />
-                      {errors.address && <p className="text-sm text-[#F44336]">{errors.address}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="phoneNumber">Phone Number</Label>
-                      <Input
-                        id="phoneNumber"
-                        name="phoneNumber"
-                        placeholder="e.g., +60123456789"
-                        value={formData.phoneNumber}
-                        onChange={handleChange}
-                        className={errors.phoneNumber ? "border-[#F44336]" : ""}
-                      />
-                      {errors.phoneNumber && <p className="text-sm text-[#F44336]">{errors.phoneNumber}</p>}
+                      {errors.plateNumber && (
+                        <p className="text-sm font-medium text-destructive">
+                          {errors.plateNumber}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <div className="mt-6">
-                    <Button type="submit" className="w-full bg-[#00A86B] hover:bg-[#008f5b] text-lg py-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneNumber">Phone Number</Label>
+                    <Input
+                      id="phoneNumber"
+                      name="phoneNumber"
+                      type="tel"
+                      placeholder="e.g., +60123456789"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      className={`transition-all ${errors.phoneNumber ? "border-destructive focus-visible:ring-destructive" : "focus-visible:ring-primary"}`}
+                    />
+                    {errors.phoneNumber && (
+                      <p className="text-sm font-medium text-destructive">
+                        {errors.phoneNumber}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Delivery Address</Label>
+                    <Textarea
+                      id="address"
+                      name="address"
+                      placeholder="Enter your full street address, building, and postal code"
+                      rows={4}
+                      value={formData.address}
+                      onChange={handleChange}
+                      className={`resize-none transition-all ${errors.address ? "border-destructive focus-visible:ring-destructive" : "focus-visible:ring-primary"}`}
+                    />
+                    {errors.address && (
+                      <p className="text-sm font-medium text-destructive">
+                        {errors.address}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-4 lg:hidden">
+                    <Button
+                      type="submit"
+                      className="w-full py-6 text-base font-semibold shadow-md transition-all"
+                    >
                       Place Order
                       <CreditCard className="ml-2 h-5 w-5" />
                     </Button>
@@ -170,75 +202,76 @@ export default function OrderNFCPage() {
             </Card>
           </div>
 
-          <div>
-            <Card className="shadow-lg">
-              <CardHeader className="bg-[#F5F5F5] rounded-t-lg">
-                <CardTitle className="text-xl text-[#212121]">Order Summary</CardTitle>
+          {/* Sticky Order Summary Sidebar */}
+          <div className="lg:sticky lg:top-8 space-y-6">
+            <Card className="shadow-md border-border/50 h-full flex flex-col">
+              <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
+                <CardTitle className="text-lg font-semibold text-foreground flex items-center">
+                  Order Summary
+                </CardTitle>
               </CardHeader>
 
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-[#212121]">NFC Sticker</span>
-                    <span className="font-bold text-[#212121]">RM 5.00</span>
-                  </div>
+              <CardContent className="pt-6 space-y-4 flex-grow flex flex-col">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground font-medium">
+                    NFC Sticker (1x)
+                  </span>
+                  <span className="font-semibold text-foreground">RM 5.00</span>
+                </div>
 
-                  <div className="flex justify-between">
-                    <span className="text-[#212121]">Shipping</span>
-                    <span className="font-bold text-[#212121]">RM 5.00</span>
-                  </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground font-medium">
+                    Standard Shipping
+                  </span>
+                  <span className="font-semibold text-foreground">RM 5.00</span>
+                </div>
 
-                  <div className="border-t pt-4 flex justify-between">
-                    <span className="font-bold text-[#212121]">Total</span>
-                    <span className="font-bold text-[#00A86B]">RM 10.00</span>
-                  </div>
+                <div className="border-t border-dashed border-border/80 pt-4 flex justify-between items-center">
+                  <span className="font-bold text-foreground">Total</span>
+                  <span className="font-bold text-xl text-primary">
+                    RM 10.00
+                  </span>
+                </div>
+
+                <div className="pt-4 hidden lg:block mt-auto">
+                  <Button
+                    onClick={handleSubmit}
+                    className="w-full py-6 text-base font-semibold shadow-md transition-all"
+                  >
+                    Place Order
+                    <CreditCard className="ml-2 h-5 w-5" />
+                  </Button>
                 </div>
               </CardContent>
 
-              <CardFooter className="bg-[#F5F5F5] rounded-b-lg">
-                <div className="w-full space-y-4">
-                  <div className="flex items-center">
-                    <Truck className="h-5 w-5 text-[#00A86B] mr-2" />
-                    <span className="text-sm text-[#212121]">Estimated delivery: 3-5 business days</span>
+              <CardFooter className="bg-muted/30 border-t border-border/50 pt-5 flex-col items-start gap-4 mt-auto">
+                <div className="flex items-start gap-3">
+                  <div className="bg-primary/10 p-2 rounded-full shrink-0">
+                    <Truck className="h-4 w-4 text-primary" />
                   </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed pt-0.5">
+                    <strong className="text-foreground font-semibold">
+                      Estimated delivery:
+                    </strong>
+                    <br />
+                    3-5 business days via standard courier.
+                  </p>
+                </div>
 
-                  <div className="text-sm text-[#212121]">
-                    <p>Your NFC sticker will be linked to your registered car plate number.</p>
+                <div className="flex items-start gap-3">
+                  <div className="bg-primary/10 p-2 rounded-full shrink-0">
+                    <MapPin className="h-4 w-4 text-primary" />
                   </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed pt-0.5">
+                    Your NFC sticker will be pre-linked to your registered car
+                    plate number.
+                  </p>
                 </div>
               </CardFooter>
-            </Card>
-
-            <Card className="shadow-lg mt-6">
-              <CardHeader className="bg-[#F5F5F5] rounded-t-lg">
-                <CardTitle className="text-xl text-[#212121]">Installation Guide</CardTitle>
-              </CardHeader>
-
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div className="bg-white border border-[#E0E0E0] rounded-lg p-4">
-                    <h3 className="font-bold text-[#212121] mb-2">Where to place your NFC sticker:</h3>
-                    <p className="text-sm text-[#212121]">
-                      Place the NFC sticker on the inside of your windshield, preferably in the lower corner of the
-                      passenger side for easy scanning.
-                    </p>
-                  </div>
-
-                  <div className="bg-white border border-[#E0E0E0] rounded-lg p-4">
-                    <h3 className="font-bold text-[#212121] mb-2">How to apply:</h3>
-                    <ol className="text-sm text-[#212121] list-decimal pl-4 space-y-1">
-                      <li>Clean the area with alcohol wipe (included)</li>
-                      <li>Peel off the backing</li>
-                      <li>Apply firmly to the glass</li>
-                      <li>Press for 30 seconds to ensure adhesion</li>
-                    </ol>
-                  </div>
-                </div>
-              </CardContent>
             </Card>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
